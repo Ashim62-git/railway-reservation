@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RailEase - Smart Railway Reservation System</title>
+    
+    <!-- Bootstrap 5.3 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome 6 Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Custom CSS matching Reference Design -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- 1. Top Navigation Bar (RailEase) -->
+    <header class="re-navbar-wrapper sticky-top">
+        <nav class="navbar navbar-expand-lg bg-white border-bottom py-3">
+            <div class="container-fluid px-lg-5">
+                <!-- Brand Logo -->
+                <a class="navbar-brand d-flex align-items-center gap-2" href="#" onclick="showPage('search'); return false;">
+                    <span class="re-logo-icon">
+                        <i class="fa-solid fa-train-subway text-cyan"></i>
+                    </span>
+                    <span class="re-brand-text">RailEase</span>
+                </a>
+
+                <!-- Mobile Toggle -->
+                <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#reNavContent">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <!-- Nav Links -->
+                <div class="collapse navbar-collapse" id="reNavContent">
+                    <ul class="navbar-nav mx-auto mb-2 mb-lg-0 re-nav-links gap-1">
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" onclick="showPage('search'); return false;">Home</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link active-pill" href="#" id="navSearchLink" onclick="showPage('search'); return false;">Search Trains</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" id="navBookingsLink" onclick="showPage('bookings'); return false;">My Bookings</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" id="navPnrLink" onclick="showPage('pnr'); return false;">PNR Status</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" onclick="showPage('help'); return false;">Help & Support</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" id="navAdminLink" onclick="showPage('admin'); return false;">Admin Dashboard</a>
+                        </li>
+                    </ul>
+
+                    <!-- Right Controls: Sign In, Register, Profile -->
+                    <div class="d-flex align-items-center gap-3">
+                        <button class="btn btn-link re-signin-btn text-decoration-none p-0" onclick="openPassengerModal()">Sign In</button>
+                        <button class="btn re-register-pill" onclick="openPassengerModal()">Register</button>
+                        <div class="re-user-avatar" onclick="openPassengerModal()" title="Passenger Directory">
+                            <i class="fa-regular fa-user"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- MAIN APP CONTAINER -->
+    <div class="container-fluid px-lg-5 py-3">
+
+        <!-- ========================================================
+             PAGE 1: TRAIN SEARCH & RESULTS (PRIMARY REFERENCE SCREEN)
+             ======================================================== -->
+        <main id="searchPage" class="re-page active-page">
+            
+            <!-- Dark Navy Summary Banner -->
+            <section class="re-summary-banner mb-4">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="re-banner-icon">
+                            <i class="fa-solid fa-train text-white"></i>
+                        </div>
+                        <div>
+                            <h1 class="re-banner-title mb-1" id="bannerRouteTitle">
+                                <span id="bannerSourceText">Chennai Egmore</span>
+                                <i class="fa-solid fa-arrow-right mx-2 text-white-50 fs-6"></i>
+                                <span id="bannerDestText">Tirunelveli</span>
+                            </h1>
+                            <div class="re-banner-meta d-flex align-items-center gap-2 flex-wrap">
+                                <span><i class="fa-regular fa-calendar me-1"></i> <span id="bannerDateText">Oct 15, 2026</span></span>
+                                <span class="re-meta-dot">•</span>
+                                <span><i class="fa-regular fa-user me-1"></i> <span id="bannerPassengerCountText">1 Passenger</span></span>
+                                <span class="re-meta-dot">•</span>
+                                <span class="re-meta-count text-cyan fw-semibold" id="bannerTrainsCount">3 Trains Found</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <button class="btn re-modify-btn d-flex align-items-center gap-2" onclick="openModifySearchModal()">
+                            <i class="fa-solid fa-sliders"></i>
+                            <span>Modify Search</span>
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Two-Column Layout: Sidebar Filters + Train Cards -->
+            <div class="row g-4">
+                <!-- Left Sidebar: Filters -->
+                <aside class="col-lg-3 col-md-4">
+                    <div class="re-card re-filters-card">
+                        <!-- Filters Header -->
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h2 class="re-filters-heading mb-0">Filters</h2>
+                            <button type="button" class="btn btn-link re-reset-link p-0 text-decoration-none" onclick="resetAllFilters()">Reset All</button>
+                        </div>
+
+                        <!-- Filter: Direct Trains Only -->
+                        <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
+                            <span class="re-filter-label mb-0">Direct Trains Only</span>
+                            <div class="form-check form-switch mb-0 p-0">
+                                <input class="form-check-input re-toggle-switch" type="checkbox" id="directTrainsToggle" checked onchange="applyFilters()">
+                            </div>
+                        </div>
+
+                        <!-- Filter: Departure Time -->
+                        <div class="mb-4 pb-3 border-bottom">
+                            <label class="re-filter-label mb-2 d-block">Departure Time</label>
+                            <div class="row g-2">
+                                <div class="col-6">
+                                    <div class="re-time-filter-box" data-time="morning" onclick="toggleTimeFilter(this, 'morning')">
+                                        <i class="fa-regular fa-sun mb-1"></i>
+                                        <div class="time-title">Morning</div>
+                                        <div class="time-range">6 AM - 12 PM</div>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="re-time-filter-box" data-time="afternoon" onclick="toggleTimeFilter(this, 'afternoon')">
+                                        <i class="fa-solid fa-sun mb-1"></i>
+                                        <div class="time-title">Afternoon</div>
+                                        <div class="time-range">12 PM - 6 PM</div>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="re-time-filter-box" data-time="evening" onclick="toggleTimeFilter(this, 'evening')">
+                                        <i class="fa-solid fa-cloud-sun mb-1"></i>
+                                        <div class="time-title">Evening</div>
+                                        <div class="time-range">6 PM - 12 AM</div>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="re-time-filter-box" data-time="night" onclick="toggleTimeFilter(this, 'night')">
+                                        <i class="fa-regular fa-moon mb-1"></i>
+                                        <div class="time-title">Night</div>
+                                        <div class="time-range">12 AM - 6 AM</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Filter: Train Type -->
+                        <div class="mb-4 pb-3 border-bottom">
+                            <label class="re-filter-label mb-2 d-block">Train Type</label>
+                            <div class="d-flex flex-column gap-2">
+                                <label class="re-checkbox-item">
+                                    <input type="checkbox" class="re-check-input" value="Superfast" checked onchange="applyFilters()">
+                                    <span>Superfast</span>
+                                </label>
+                                <label class="re-checkbox-item">
+                                    <input type="checkbox" class="re-check-input" value="Express" checked onchange="applyFilters()">
+                                    <span>Express</span>
+                                </label>
+                                <label class="re-checkbox-item">
+                                    <input type="checkbox" class="re-check-input" value="Rajdhani" checked onchange="applyFilters()">
+                                    <span>Rajdhani</span>
+                                </label>
+                                <label class="re-checkbox-item">
+                                    <input type="checkbox" class="re-check-input" value="Vande Bharat" checked onchange="applyFilters()">
+                                    <span>Vande Bharat</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Filter: Availability -->
+                        <div>
+                            <label class="re-filter-label mb-2 d-block">Availability</label>
+                            <label class="re-checkbox-item">
+                                <input type="checkbox" class="re-check-input" id="availOnlyCheck" onchange="applyFilters()">
+                                <span>Available Seats Only</span>
+                            </label>
+                        </div>
+                    </div>
+                </aside>
+
+                <!-- Right Column: Train Cards List -->
+                <section class="col-lg-9 col-md-8">
+                    <!-- Sorting & Count Bar -->
+                    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="text-muted small">Sort by:</span>
+                            <select id="sortSelect" class="form-select form-select-sm re-sort-select" onchange="handleSortChange()">
+                                <option value="departure-asc">Departure Time (Earliest)</option>
+                                <option value="departure-desc">Departure Time (Latest)</option>
+                                <option value="duration-asc">Duration (Fastest)</option>
+                                <option value="seats-desc">Available Seats (Highest)</option>
+                            </select>
+                        </div>
+                        <div class="text-muted small" id="showingCountText">
+                            Showing 3 of 3 available trains
+                        </div>
+                    </div>
+
+                    <!-- Train Cards Render Container -->
+                    <div id="trainsListContainer" class="d-flex flex-column gap-3">
+                        <!-- Loaded dynamically via script.js -->
+                        <div class="re-card text-center py-5">
+                            <div class="spinner-border text-primary mb-3" role="status"></div>
+                            <p class="text-muted">Loading train schedules from PostgreSQL...</p>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+
+        <!-- ========================================================
+             PAGE 2: MY BOOKINGS (ALL RESERVATIONS)
+             ======================================================== -->
+        <section id="bookingsPage" class="re-page d-none">
+            <div class="re-summary-banner mb-4">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="re-banner-icon">
+                            <i class="fa-solid fa-receipt text-white"></i>
+                        </div>
+                        <div>
+                            <h1 class="re-banner-title mb-1">My Bookings & Reservations</h1>
+                            <div class="re-banner-meta">Manage active tickets, review history, or cancel reservations</div>
+                        </div>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button class="btn re-modify-btn" onclick="showPage('search')">
+                            <i class="fa-solid fa-plus me-1"></i> Book New Ticket
+                        </button>
+                        <button class="btn btn-outline-light rounded-pill px-3" onclick="loadAllReservations()">
+                            <i class="fa-solid fa-rotate me-1"></i> Refresh
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="re-card p-4">
+                <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                    <div class="btn-group btn-group-sm" role="group">
+                        <button type="button" class="btn btn-outline-dark active" onclick="setReservationFilter('ALL', this)">All</button>
+                        <button type="button" class="btn btn-outline-success" onclick="setReservationFilter('CONFIRMED', this)">Confirmed</button>
+                        <button type="button" class="btn btn-outline-danger" onclick="setReservationFilter('CANCELLED', this)">Cancelled</button>
+                    </div>
+                    <input type="text" id="reservationSearchInput" class="form-control form-control-sm" style="max-width: 260px;" placeholder="Filter by PNR or name..." onkeyup="filterReservationsTable()">
+                </div>
+
+                <div id="reservationsTableContainer" class="table-responsive">
+                    <div class="text-center py-4 text-muted">
+                        <div class="spinner-border spinner-border-sm me-2"></div> Loading reservations...
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================================
+             PAGE 3: PNR STATUS ENQUIRY
+             ======================================================== -->
+        <section id="pnrPage" class="re-page d-none">
+            <div class="re-summary-banner mb-4">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="re-banner-icon">
+                        <i class="fa-solid fa-barcode text-white"></i>
+                    </div>
+                    <div>
+                        <h1 class="re-banner-title mb-1">Check PNR Status</h1>
+                        <div class="re-banner-meta">Enter your 10-character booking PNR to view real-time reservation status</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row justify-content-center">
+                <div class="col-lg-7">
+                    <div class="re-card p-4 mb-4">
+                        <form onsubmit="handlePnrLookup(event)" class="row g-2">
+                            <div class="col-md-9">
+                                <div class="input-group input-group-lg">
+                                    <span class="input-group-text bg-white border-end-0"><i class="fa-solid fa-ticket text-muted"></i></span>
+                                    <input type="text" id="pnrInputBox" class="form-control border-start-0 text-uppercase fw-bold" placeholder="Enter PNR number (e.g. 2194514925)" maxlength="10" required>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <button type="submit" class="btn btn-dark w-100 h-100 fw-bold rounded-3">Check Status</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div id="pnrResultCard"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================================
+             PAGE 4: ADMIN DASHBOARD (TRAINS FLEET & MANAGEMENT)
+             ======================================================== -->
+        <section id="adminPage" class="re-page d-none">
+            <div class="re-summary-banner mb-4">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="re-banner-icon">
+                            <i class="fa-solid fa-gauge text-white"></i>
+                        </div>
+                        <div>
+                            <h1 class="re-banner-title mb-1">Admin Dashboard & Train Fleet</h1>
+                            <div class="re-banner-meta">Monitor train operations, routes, capacities, and add new services</div>
+                        </div>
+                    </div>
+                    <button class="btn re-modify-btn" onclick="openAddTrainModal()">
+                        <i class="fa-solid fa-plus me-1"></i> Add New Train
+                    </button>
+                </div>
+            </div>
+
+            <div class="row g-4 mb-4">
+                <div class="col-md-3">
+                    <div class="re-card p-3 text-center">
+                        <div class="text-muted small">Total Trains</div>
+                        <div class="fs-2 fw-bold text-dark" id="adminTotalTrains">-</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="re-card p-3 text-center">
+                        <div class="text-muted small">Total Capacity</div>
+                        <div class="fs-2 fw-bold text-primary" id="adminTotalSeats">-</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="re-card p-3 text-center">
+                        <div class="text-muted small">Registered Passengers</div>
+                        <div class="fs-2 fw-bold text-success" id="adminTotalPassengers">-</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="re-card p-3 text-center">
+                        <div class="text-muted small">Confirmed Bookings</div>
+                        <div class="fs-2 fw-bold text-warning" id="adminTotalBookings">-</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="re-card p-4">
+                <h4 class="fw-bold mb-3">All Operational Trains</h4>
+                <div id="adminFleetContainer" class="table-responsive"></div>
+            </div>
+        </section>
+
+        <!-- ========================================================
+             PAGE 5: HELP & SUPPORT
+             ======================================================== -->
+        <section id="helpPage" class="re-page d-none">
+            <div class="re-summary-banner mb-4">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="re-banner-icon">
+                        <i class="fa-solid fa-headset text-white"></i>
+                    </div>
+                    <div>
+                        <h1 class="re-banner-title mb-1">Help & Customer Support</h1>
+                        <div class="re-banner-meta">24/7 Assistance for Railway Bookings, Refunds & Inquiries</div>
+                    </div>
+                </div>
+            </div>
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="re-card p-4 text-center h-100">
+                        <i class="fa-solid fa-ticket-simple fs-1 text-primary mb-3"></i>
+                        <h5 class="fw-bold">Booking Support</h5>
+                        <p class="text-muted small">Need assistance booking seats, choosing travel classes, or changing journey dates?</p>
+                        <button class="btn btn-outline-dark btn-sm rounded-pill" onclick="showPage('search')">Search & Book</button>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="re-card p-4 text-center h-100">
+                        <i class="fa-solid fa-ban fs-1 text-danger mb-3"></i>
+                        <h5 class="fw-bold">Cancellations & Refunds</h5>
+                        <p class="text-muted small">Cancel tickets using your 10-digit PNR. Seats are released immediately back to the pool.</p>
+                        <button class="btn btn-outline-dark btn-sm rounded-pill" onclick="showPage('bookings')">Manage Bookings</button>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="re-card p-4 text-center h-100">
+                        <i class="fa-solid fa-circle-question fs-1 text-success mb-3"></i>
+                        <h5 class="fw-bold">PNR Status Help</h5>
+                        <p class="text-muted small">Check real-time confirmation status for any existing booking code.</p>
+                        <button class="btn btn-outline-dark btn-sm rounded-pill" onclick="showPage('pnr')">Check PNR</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </div>
+
+    <!-- ========================================================
+         MODAL 1: MODIFY SEARCH MODAL
+         ======================================================== -->
+    <div class="modal fade" id="modifySearchModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content re-modal-content border-0">
+                <div class="modal-header border-bottom">
+                    <h5 class="modal-title fw-bold"><i class="fa-solid fa-sliders text-primary me-2"></i>Modify Train Search</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form onsubmit="handleModifySearchSubmit(event)">
+                    <div class="modal-body p-4">
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold text-muted">From Station</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light"><i class="fa-solid fa-location-dot text-primary"></i></span>
+                                <input type="text" id="modalSourceInput" class="form-control" placeholder="e.g. Chennai Egmore" required>
+                            </div>
+                        </div>
+
+                        <div class="text-center my-2">
+                            <button type="button" class="btn btn-sm btn-light border rounded-circle" onclick="swapModalStations()" title="Swap">
+                                <i class="fa-solid fa-arrow-right-arrow-left"></i>
+                            </button>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold text-muted">To Station</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light"><i class="fa-solid fa-location-crosshairs text-danger"></i></span>
+                                <input type="text" id="modalDestInput" class="form-control" placeholder="e.g. Tirunelveli" required>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold text-muted">Journey Date</label>
+                            <input type="date" id="modalDateInput" class="form-control" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-top bg-light">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-dark fw-bold px-4">Search Trains</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================================
+         MODAL 2: BOOK TICKET MODAL
+         ======================================================== -->
+    <div class="modal fade" id="bookingModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content re-modal-content border-0">
+                <div class="modal-header bg-navy text-white">
+                    <h5 class="modal-title fw-bold"><i class="fa-solid fa-ticket me-2 text-cyan"></i>Complete Your Reservation</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form onsubmit="handleModalBookingSubmit(event)">
+                    <div class="modal-body p-4">
+                        <!-- Train Summary Strip in Modal -->
+                        <div class="p-3 bg-light rounded-3 mb-4 border d-flex justify-content-between align-items-center flex-wrap gap-2" id="modalTrainStrip">
+                            <!-- Filled dynamically -->
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="col-md-7">
+                                <label class="form-label fw-semibold">Select Passenger</label>
+                                <select id="modalPassengerSelect" class="form-select form-select-lg" required>
+                                    <option value="">-- Choose Passenger --</option>
+                                </select>
+                                <div class="form-text mt-1">
+                                    New passenger? <a href="#" onclick="bootstrap.Modal.getInstance(document.getElementById('bookingModal')).hide(); openPassengerModal(); return false;">Register passenger now</a>.
+                                </div>
+                            </div>
+                            <div class="col-md-5">
+                                <label class="form-label fw-semibold">Selected Class</label>
+                                <input type="text" id="modalSelectedClass" class="form-control form-control-lg bg-light" readonly value="Sleeper (SL) - ₹385">
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label fw-semibold">Journey Date</label>
+                                <input type="date" id="modalBookingDate" class="form-control form-control-lg" required>
+                            </div>
+                        </div>
+
+                        <!-- Ticket Details Preview -->
+                        <div class="mt-4 p-3 border rounded-3 bg-white">
+                            <div class="d-flex justify-content-between small text-muted mb-1">
+                                <span>Base Fare</span>
+                                <span id="modalBaseFare">₹385</span>
+                            </div>
+                            <div class="d-flex justify-content-between small text-muted mb-1">
+                                <span>Reservation Fee & GST</span>
+                                <span>₹0</span>
+                            </div>
+                            <div class="d-flex justify-content-between fw-bold fs-5 text-dark border-top pt-2 mt-2">
+                                <span>Total Amount</span>
+                                <span id="modalTotalFare" class="text-primary">₹385</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-top bg-light">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" id="modalConfirmBookBtn" class="btn btn-dark fw-bold px-4 py-2">
+                            <i class="fa-solid fa-check-circle me-1"></i> Confirm & Book Ticket
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================================
+         MODAL 3: PASSENGER REGISTRATION & DIRECTORY MODAL
+         ======================================================== -->
+    <div class="modal fade" id="passengerModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content re-modal-content border-0">
+                <div class="modal-header border-bottom">
+                    <h5 class="modal-title fw-bold"><i class="fa-solid fa-users text-primary me-2"></i>Passenger Management</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <ul class="nav nav-pills mb-4" id="passengerTabs">
+                        <li class="nav-item">
+                            <button class="nav-link active rounded-pill px-4" data-bs-toggle="pill" data-bs-target="#tabRegister">Register New</button>
+                        </li>
+                        <li class="nav-item">
+                            <button class="nav-link rounded-pill px-4" data-bs-toggle="pill" data-bs-target="#tabDirectory" onclick="loadPassengersList()">Passenger List</button>
+                        </li>
+                    </ul>
+
+                    <div class="tab-content">
+                        <!-- Register Tab -->
+                        <div class="tab-pane fade show active" id="tabRegister">
+                            <form onsubmit="handleRegisterPassengerSubmit(event)">
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold small">Full Name</label>
+                                    <input type="text" id="regPassengerName" class="form-control" placeholder="e.g. Ramesh Babu" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold small">Email Address</label>
+                                    <input type="email" id="regPassengerEmail" class="form-control" placeholder="e.g. ramesh@example.com" required>
+                                </div>
+                                <div class="mb-4">
+                                    <label class="form-label fw-semibold small">Phone Number (10 digits)</label>
+                                    <input type="tel" id="regPassengerPhone" class="form-control" placeholder="e.g. 9876543210" pattern="[0-9]{10}" maxlength="10" required>
+                                </div>
+                                <button type="submit" id="regSubmitBtn" class="btn btn-dark w-100 fw-bold py-2">
+                                    Register Passenger
+                                </button>
+                            </form>
+                        </div>
+
+                        <!-- Directory Tab -->
+                        <div class="tab-pane fade" id="tabDirectory">
+                            <div id="modalPassengersListContainer" class="table-responsive">
+                                <div class="text-center py-4 text-muted">
+                                    <div class="spinner-border spinner-border-sm me-2"></div> Loading...
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================================
+         MODAL 4: TICKET CONFIRMATION / BOARDING PASS MODAL
+         ======================================================== -->
+    <div class="modal fade" id="ticketSuccessModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content re-modal-content border-0">
+                <div class="modal-header bg-navy text-white">
+                    <h5 class="modal-title fw-bold"><i class="fa-solid fa-circle-check text-success me-2"></i>Booking Confirmed! Boarding Pass</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4" id="ticketSuccessBody"></div>
+                <div class="modal-footer border-top bg-light">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-dark" onclick="window.print()">
+                        <i class="fa-solid fa-print me-1"></i> Print Ticket
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================================
+         MODAL 5: ADD NEW TRAIN MODAL (ADMIN)
+         ======================================================== -->
+    <div class="modal fade" id="addTrainModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content re-modal-content border-0">
+                <div class="modal-header border-bottom">
+                    <h5 class="modal-title fw-bold"><i class="fa-solid fa-train text-primary me-2"></i>Add New Train Service</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form onsubmit="handleAddTrainSubmit(event)">
+                    <div class="modal-body p-4">
+                        <div class="row g-2 mb-3">
+                            <div class="col-md-5">
+                                <label class="form-label small fw-semibold">Train #</label>
+                                <input type="text" id="newTrainNo" class="form-control" placeholder="12631" required>
+                            </div>
+                            <div class="col-md-7">
+                                <label class="form-label small fw-semibold">Train Name</label>
+                                <input type="text" id="newTrainName" class="form-control" placeholder="Nellai Superfast Express" required>
+                            </div>
+                        </div>
+                        <div class="row g-2 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">Source Station</label>
+                                <input type="text" id="newTrainSrc" class="form-control" placeholder="Chennai Egmore" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">Destination Station</label>
+                                <input type="text" id="newTrainDst" class="form-control" placeholder="Tirunelveli" required>
+                            </div>
+                        </div>
+                        <div class="row g-2 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">Total Seats</label>
+                                <input type="number" id="newTrainTotal" class="form-control" value="100" min="1" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">Available Seats</label>
+                                <input type="number" id="newTrainAvail" class="form-control" value="98" min="0" required>
+                            </div>
+                        </div>
+                        <div class="row g-2 mb-2">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">Departure Time</label>
+                                <input type="time" id="newTrainDep" class="form-control" value="20:10" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">Arrival Time</label>
+                                <input type="time" id="newTrainArr" class="form-control" value="07:45" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-top bg-light">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-dark fw-bold px-4">Save Train</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Global Toast Container -->
+    <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1090;">
+        <div id="reToast" class="toast align-items-center text-white border-0 shadow-lg" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body d-flex align-items-center gap-2">
+                    <span id="toastIcon"><i class="fa-solid fa-circle-check"></i></span>
+                    <span id="toastMessage">Success</span>
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. Footer (Faithful to Reference Image) -->
+    <footer class="re-footer bg-white border-top mt-5 pt-5 pb-4">
+        <div class="container-fluid px-lg-5">
+            <div class="row g-4 pb-4 border-bottom">
+                <!-- Col 1: Brand -->
+                <div class="col-lg-3 col-md-6">
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <span class="re-logo-icon">
+                            <i class="fa-solid fa-train-subway text-cyan"></i>
+                        </span>
+                        <span class="re-brand-text">RailEase</span>
+                    </div>
+                    <p class="text-muted small mb-0">
+                        Smart Railway Reservation System making your journeys seamless and comfortable.
+                    </p>
+                </div>
+
+                <!-- Col 2: Quick Links -->
+                <div class="col-lg-3 col-md-6">
+                    <h6 class="fw-bold mb-3 text-dark">Quick Links</h6>
+                    <ul class="list-unstyled d-flex flex-column gap-2 small">
+                        <li><a href="#" class="re-footer-link" onclick="showPage('search'); return false;">Search Trains</a></li>
+                        <li><a href="#" class="re-footer-link" onclick="showPage('pnr'); return false;">PNR Enquiry</a></li>
+                        <li><a href="#" class="re-footer-link" onclick="showPage('bookings'); return false;">Cancellation</a></li>
+                    </ul>
+                </div>
+
+                <!-- Col 3: Support -->
+                <div class="col-lg-3 col-md-6">
+                    <h6 class="fw-bold mb-3 text-dark">Support</h6>
+                    <ul class="list-unstyled d-flex flex-column gap-2 small">
+                        <li><a href="#" class="re-footer-link" onclick="showPage('help'); return false;">Help Center</a></li>
+                        <li><a href="#" class="re-footer-link" onclick="showPage('help'); return false;">Safety Guidelines</a></li>
+                        <li><a href="#" class="re-footer-link" onclick="showPage('help'); return false;">Contact Us</a></li>
+                    </ul>
+                </div>
+
+                <!-- Col 4: Legal -->
+                <div class="col-lg-3 col-md-6">
+                    <h6 class="fw-bold mb-3 text-dark">Legal</h6>
+                    <ul class="list-unstyled d-flex flex-column gap-2 small">
+                        <li><a href="#" class="re-footer-link" onclick="alert('Terms of Service: Valid reservation is required for travel.'); return false;">Terms of Service</a></li>
+                        <li><a href="#" class="re-footer-link" onclick="alert('Privacy Policy: Passenger data is securely handled.'); return false;">Privacy Policy</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Bottom Copyright Line -->
+            <div class="text-center text-muted small pt-3">
+                &copy; 2026 RailEase Technologies. All rights reserved.
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5.3 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Custom Application JS -->
+    <script src="script.js"></script>
+</body>
+</html>
